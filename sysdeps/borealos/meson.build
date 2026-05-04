@@ -2,7 +2,21 @@ sysdep_supported_options = {
     'posix': true,
 }
 
-if not no_headeres
+rtld_sources += files(
+    'sysdeps.cpp',
+    'syscall.cpp',
+)
+
+rtld_include_dirs += include_directories('include')
+
+libc_sources += files(
+    'entry.cpp',
+    'sysdeps.cpp',
+    'syscall.cpp',
+)
+libc_include_dirs += include_directories('include')
+
+if not no_headers
     install_headers(
         'include/abi-bits/auxv.h',
         'include/abi-bits/blkcnt_t.h',
@@ -52,7 +66,21 @@ if not no_headeres
         'include/abi-bits/utmp-defines.h',
         'include/abi-bits/utmpx.h',
         'include/abi-bits/sigset_t.h',
+        'include/abi-bits/timer_t.h',
+        'include/abi-bits/mqd_t.h',
+
         subdir: 'abi-bits',
         follow_symlinks: true
+    )
+endif
+
+if not headers_only
+    crt = custom_target('crt1',
+        build_by_default: true,
+        command: c_compiler.cmd_array() + ['-c', '-o', '@OUTPUT@', '@INPUT@'],
+        input: 'crt1.S',
+        output: 'crt1.o',
+        install: true,
+        install_dir: get_option('libdir'),
     )
 endif

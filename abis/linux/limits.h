@@ -1,6 +1,8 @@
 #ifndef _ABIBITS_LIMITS_H
 #define _ABIBITS_LIMITS_H
 
+#include_next <limits.h>
+
 #define __MLIBC_IOV_MAX 1024
 #define __MLIBC_LOGIN_NAME_MAX 256
 #define __MLIBC_HOST_NAME_MAX 64
