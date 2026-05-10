@@ -1,34 +1,18 @@
-#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <bits/ensure.h>
+#include <mlibc/elf/startup.h>
+#include <sys/auxv.h>
 
-#include "stdio.h"
-#include "stdlib.h"
-#include "unistd.h"
+extern "C" { [[gnu::visibility("hidden")]] void *__dso_handle; }
 
-extern "C" {
+extern "C" void __dlapi_enter(uintptr_t *);
 
-    extern void (*__init_array_start[])(void);
-    extern void (*__init_array_end[])(void);
-    extern void (*__fini_array_start[])(void);
-    extern void (*__fini_array_end[])(void);
+extern char **environ;
 
-    static void run_init_array() {
-        size_t n = (size_t)(__init_array_end - __init_array_start);
-        for (size_t i = 0; i < n; i++)
-            __init_array_start[i]();
-    }
+extern "C" void __mlibc_entry(uintptr_t *entry_stack, int (*main_fn)(int argc, char *argv[], char *env[])) {
+    __dlapi_enter(entry_stack);
 
-    static void run_fini_array() {
-        size_t n = (size_t)(__fini_array_end - __fini_array_start);
-        // reverse order per C++ spec
-        for (size_t i = n; i > 0; i--)
-            __fini_array_start[i - 1]();
-    }
-
-    void _mlibc_entry( int (*main)(int, char **, char **), int argc, char **argv, char **envp) {
-        environ = envp;
-        run_init_array();
-        int ret = main(argc, argv, envp);
-        run_fini_array();
-        exit(ret);
-    }
+    auto result = main_fn(mlibc::entry_stack.argc, mlibc::entry_stack.argv, environ);
+    exit(result);
 }
