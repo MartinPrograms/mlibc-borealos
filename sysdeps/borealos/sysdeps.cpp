@@ -108,7 +108,13 @@ namespace mlibc {
         return 0;
     }
 
-    int Sysdeps<Open>::operator()(const char *, int, unsigned int, int *) {
+    int Sysdeps<Open>::operator()(const char * path, int flags, int mode, int *fd) {
+        void *result = (void *)__do_syscall3((uint64_t)Syscalls::ID::OPEN, (uintptr_t)path, flags, mode);
+        if ((uintptr_t)result > (uintptr_t)-4096) {
+            return -1;
+        }
+
+        *fd = (int)(uintptr_t)result;
         return 0;
     }
 
